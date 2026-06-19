@@ -44,7 +44,7 @@ async function runChecks(page, siteUrl) {
   const vinEl = await page.$('[class*="vin"], [data-vin], [itemprop="vehicleIdentificationNumber"]').catch(() => null);
   const vinText = vinEl ? await vinEl.textContent().catch(() => '') : '';
   const bodyText = await page.textContent('body').catch(() => '');
-  const vinMatch = vinText.match(/[A-HJ-NPR-Z0-9]{17}/i) || bodyText.match(/VIN[:\s]+([A-HJ-NPR-Z0-9]{17})/i);
+  const vinMatch = vinText.match(/[A-HJ-NPR-Z0-9]{17}/) || bodyText.match(/VIN[:\s]+([A-HJ-NPR-Z0-9]{17})/);
   findings.push({
     check: 'VIN is present',
     pass: !!vinMatch,
@@ -54,7 +54,7 @@ async function runChecks(page, siteUrl) {
   // Stock number
   const stockEl = await page.$('[class*="stock"], [data-stock]').catch(() => null);
   const stockText = stockEl ? await stockEl.textContent().catch(() => '') : '';
-  const hasStock = stockText.trim().length > 0 || /stock[:\s#]+\S+/i.test(bodyText);
+  const hasStock = stockText.trim().length > 0 || /stock\s*[:#]\s*[A-Z0-9]{3,}/i.test(bodyText);
   findings.push({
     check: 'Stock number is present',
     pass: hasStock,
@@ -74,8 +74,12 @@ async function runChecks(page, siteUrl) {
   }
   findings.push({
     check: 'All vehicle images load',
-    pass: brokenImages.length === 0,
-    reason: brokenImages.length > 0 ? `${brokenImages.length} broken image(s)` : null,
+    pass: imgSrcs.length > 0 && brokenImages.length === 0,
+    reason: imgSrcs.length === 0
+      ? 'No vehicle images found on page'
+      : brokenImages.length > 0
+        ? `${brokenImages.length} broken image(s)`
+        : null,
   });
 
   return findings;
