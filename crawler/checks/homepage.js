@@ -57,7 +57,12 @@ async function runChecks(page, siteUrl) {
   // Chat widget
   const chatWidget = await page.$(
     '[id*="chat"], [class*="chat"], [class*="livechat"], [id*="livechat"], ' +
-    '[class*="drift"], [class*="intercom"], iframe[src*="chat"], iframe[src*="live"]'
+    '[class*="drift"], [class*="intercom"], iframe[src*="chat"], iframe[src*="live"], ' +
+    '[class*="podium"], [id*="podium"], [class*="gubagoo"], [id*="gubagoo"], ' +
+    '[class*="activengage"], [class*="carnow"], [class*="purechat"], ' +
+    '[class*="tawk"], [class*="hubspot-messages"], [id*="hs-chat"], ' +
+    '[class*="zendesk"], [class*="freshchat"], [class*="messenger-button"], ' +
+    'iframe[src*="podium"], iframe[src*="gubagoo"], iframe[src*="activengage"]'
   ).catch(() => null);
   const chatVisible = chatWidget ? await chatWidget.isVisible().catch(() => false) : false;
   findings.push({

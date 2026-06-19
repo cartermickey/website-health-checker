@@ -9,7 +9,8 @@ async function runChecks(page, siteUrl) {
     '[class*="vehicle-price"], [class*="listing-price"]'
   ).catch(() => null);
   const priceText = priceEl ? await priceEl.textContent().catch(() => '') : '';
-  const hasPrice = /\$[\d,]+/.test(priceText);
+  const priceBodyText = await page.evaluate(() => document.body.innerText).catch(() => '');
+  const hasPrice = /\$[\d,]+/.test(priceText) || /\$[\d,]+/.test(priceBodyText);
   findings.push({
     check: 'Listings display pricing',
     pass: hasPrice,
@@ -81,7 +82,7 @@ async function runChecks(page, siteUrl) {
   // CTAs present on listings
   const ctaEls = await findElementsByKeywords(
     page,
-    ['view details', 'details', 'more info', 'check availability', 'get price'],
+    ['view details', 'details', 'more info', 'check availability', 'get price', 'see details', 'shop now', 'view vehicle', 'learn more'],
     ['a', 'button']
   );
   findings.push({

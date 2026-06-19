@@ -7,12 +7,19 @@ async function tryModalCTA(page, keywords, checkName) {
   }
   for (const trigger of triggers) {
     try {
+      const urlBefore = page.url();
       await trigger.click();
-      const modal = await page.waitForSelector(
+      await page.waitForTimeout(1500);
+      // Accept URL navigation as a pass (e.g. /trade.aspx, /paymentcalc.aspx)
+      if (page.url() !== urlBefore) {
+        await page.goBack({ waitUntil: 'domcontentloaded', timeout: 10000 }).catch(() => {});
+        return { check: checkName, pass: true, reason: null };
+      }
+      // Also accept modal/overlay appearing
+      const modal = await page.$(
         '[class*="modal"]:visible, [class*="dialog"]:visible, [class*="overlay"]:visible, ' +
-        '[role="dialog"]:visible, [class*="drawer"]:visible',
-        { timeout: 3000 }
-      );
+        '[role="dialog"]:visible, [class*="drawer"]:visible'
+      ).catch(() => null);
       if (modal) {
         await page.keyboard.press('Escape');
         await page.waitForTimeout(300);
@@ -20,7 +27,7 @@ async function tryModalCTA(page, keywords, checkName) {
       }
     } catch { continue; }
   }
-  return { check: checkName, pass: false, reason: 'Button clicked but no modal appeared within 3s' };
+  return { check: checkName, pass: false, reason: 'Button clicked but no modal or navigation occurred' };
 }
 
 async function runChecks(page, siteUrl) {
@@ -34,10 +41,12 @@ async function runChecks(page, siteUrl) {
   // Vehicle price
   const priceEl = await page.$('[class*="price"], [data-price], [itemprop="price"]').catch(() => null);
   const priceText = priceEl ? await priceEl.textContent().catch(() => '') : '';
+  const priceBodyText = await page.evaluate(() => document.body.innerText).catch(() => '');
+  const hasPrice = /\$[\d,]+/.test(priceText) || /\$[\d,]+/.test(priceBodyText);
   findings.push({
     check: 'Vehicle price is present',
-    pass: /\$[\d,]+/.test(priceText),
-    reason: !/\$[\d,]+/.test(priceText) ? 'No price element with dollar amount found' : null,
+    pass: hasPrice,
+    reason: !hasPrice ? 'No price element with dollar amount found' : null,
   });
 
   // VIN

@@ -1,15 +1,15 @@
 const PAGE_TYPE_PATTERNS = {
-  srp: ['/new-vehicles', '/new', '/inventory', '/vehicles', '/used-vehicles', '/used', '/certified'],
-  specials: ['/specials', '/specials/new', '/offers', '/special-offers', '/current-offers'],
-  service: ['/service', '/service-department', '/schedule-service', '/service-center'],
-  finance: ['/finance', '/financing', '/apply', '/get-financed', '/credit-application'],
+  srp: ['/searchnew.aspx', '/searchused.aspx', '/new-inventory', '/new-vehicles', '/new', '/inventory', '/vehicles', '/used-vehicles', '/used', '/certified'],
+  specials: ['/newspecials.html', '/used-specials', '/specialoffers', '/specials', '/specials/new', '/offers', '/special-offers', '/current-offers'],
+  service: ['/service', '/service.aspx', '/service-department', '/schedule-service', '/service-center'],
+  finance: ['/finance.aspx', '/finance-application.html', '/finance', '/financing', '/apply', '/get-financed', '/credit-application'],
 };
 
 const PAGE_TYPE_NAV_KEYWORDS = {
-  srp: ['inventory', 'vehicles', 'new vehicles', 'used vehicles', 'shop vehicles'],
-  specials: ['specials', 'offers', 'deals', 'incentives'],
-  service: ['service', 'maintenance', 'repair', 'schedule service'],
-  finance: ['finance', 'financing', 'credit', 'apply', 'payment'],
+  srp: ['inventory', 'vehicles', 'new vehicles', 'used vehicles', 'shop vehicles', 'shop all new', 'shop new', 'shop all used', 'shop used'],
+  specials: ['specials', 'offers', 'deals', 'incentives', 'new specials', 'used specials', 'special offers'],
+  service: ['service', 'maintenance', 'repair', 'schedule service', 'service department'],
+  finance: ['finance', 'financing', 'credit', 'apply', 'payment', 'finance department', 'finance application'],
 };
 
 function detectPageType(url) {
@@ -45,11 +45,18 @@ async function findPageUrl(page, siteUrl, pageType) {
     if (!srpUrl) return null;
     try {
       await page.goto(srpUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
-      const links = await page.$$('a[href*="/vehicles/"], a[href*="/vdp/"], a[href*="/inventory/"]');
+      // Try specific VDP URL patterns first, then fall back to any listing link
+      let links = await page.$$('a[href*="/vehicles/"], a[href*="/vdp/"], a[href*="/inventory/"]');
+      if (links.length === 0) links = await page.$$('a[href]');
       const link = (await Promise.all(links.map(async (l) => {
         const href = await l.getAttribute('href').catch(() => null);
-        return href && href !== srpUrl ? l : null;
-      }))).find((l) => l !== null) || null;
+        if (!href || href === srpUrl) return null;
+        try {
+          const resolved = new URL(href, srpUrl).href;
+          if (resolved.startsWith(base) && resolved !== srpUrl) return l;
+        } catch { return null; }
+        return null;
+      }))).find(Boolean) || null;
       if (link) {
         const href = await link.getAttribute('href');
         return href.startsWith('http') ? href : new URL(href, srpUrl).href;
