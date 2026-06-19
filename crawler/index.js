@@ -20,6 +20,15 @@ const PAGE_CHECKS = [
 
 const AUDIT_TIMEOUT_MS = 10 * 60 * 1000;
 
+async function captureFailureScreenshot(page) {
+  try {
+    const buf = await page.screenshot({ type: 'jpeg', quality: 60, fullPage: false });
+    return `data:image/jpeg;base64,${buf.toString('base64')}`;
+  } catch {
+    return null;
+  }
+}
+
 async function runAudit(auditId, siteUrl) {
   const audit = get(auditId);
   if (!audit) throw new Error(`Audit ${auditId} not found`);
@@ -65,6 +74,7 @@ async function runAudit(auditId, siteUrl) {
         { check: 'General checks', pass: false, reason: 'Unexpected error: ' + err.message },
       ]);
       for (const f of generalFindings) {
+        if (!f.pass) f.screenshot = await captureFailureScreenshot(page);
         emit({ type: 'finding', page: label, ...f });
         f.pass ? passed++ : failed++;
       }
@@ -75,6 +85,7 @@ async function runAudit(auditId, siteUrl) {
         { check: `${label} checks`, pass: false, reason: 'Unexpected error: ' + err.message },
       ]);
       for (const f of specificFindings) {
+        if (!f.pass) f.screenshot = await captureFailureScreenshot(page);
         emit({ type: 'finding', page: label, ...f });
         f.pass ? passed++ : failed++;
       }

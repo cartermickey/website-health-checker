@@ -80,7 +80,8 @@ button:not(:disabled):hover { background: #a00d24; }
 
 .finding-item {
   display: flex;
-  align-items: baseline;
+  align-items: flex-start;
+  flex-wrap: wrap;
   gap: 0.5rem;
   padding: 0.45rem 0.75rem;
   border-radius: 5px;
@@ -94,3 +95,40 @@ button:not(:disabled):hover { background: #a00d24; }
 .icon { flex-shrink: 0; }
 .check-name { font-weight: 500; }
 .reason { color: #c5221f; font-size: 0.85rem; margin-left: 0.25rem; }
+
+.failure-screenshot {
+  width: 100%;
+  max-height: 180px;
+  object-fit: cover;
+  object-position: top;
+  border-radius: 4px;
+  margin-top: 0.25rem;
+  cursor: pointer;
+  border: 1px solid #f5c6c6;
+}
+
+.failure-details {
+  width: 100%;
+  margin: 0.2rem 0 0 1.5rem;
+  padding: 0;
+  font-size: 0.8rem;
+  color: #888;
+  list-style: disc;
+}
+
+.screenshot-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  cursor: zoom-out;
+}
+
+.screenshot-overlay img {
+  max-width: 92vw;
+  max-height: 92vh;
+  border-radius: 6px;
+}

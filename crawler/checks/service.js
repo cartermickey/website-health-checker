@@ -29,10 +29,16 @@ async function runChecks(page, siteUrl) {
     }
   }
 
+  let serviceDetails = null;
+  if (!schedulerVisible && !scheduleLink) {
+    const pageLinks = await page.$$eval('a[href]', (els) => els.slice(0, 8).map((e) => e.textContent.trim()).filter(Boolean)).catch(() => []);
+    serviceDetails = [`No schedule link found. Page links include: ${pageLinks.length > 0 ? pageLinks.join(', ') : 'none'}`];
+  }
   findings.push({
     check: 'Appointment scheduler loads',
     pass: schedulerVisible || !!scheduleLink,
     reason: !schedulerVisible && !scheduleLink ? 'Scheduler widget or schedule service link not found/visible' : null,
+    details: serviceDetails,
   });
 
   // Interactivity check only applies if an embedded widget was found

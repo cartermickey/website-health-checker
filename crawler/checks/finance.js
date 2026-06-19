@@ -31,10 +31,16 @@ async function runChecks(page, siteUrl) {
     }
   }
 
+  let prequalDetails = null;
+  if (!prequalVisible && !prequalLink) {
+    const pageLinks = await page.$$eval('a[href]', (els) => els.slice(0, 8).map((e) => e.textContent.trim()).filter(Boolean)).catch(() => []);
+    prequalDetails = [`No prequal form or link found. Page links include: ${pageLinks.length > 0 ? pageLinks.join(', ') : 'none'}`];
+  }
   findings.push({
     check: 'Prequalification form displays',
     pass: prequalVisible || !!prequalLink,
     reason: !prequalVisible && !prequalLink ? 'Prequalification form or link not found/visible' : null,
+    details: prequalDetails,
   });
 
   // Check for embedded finance application form
@@ -63,10 +69,16 @@ async function runChecks(page, siteUrl) {
     }
   }
 
+  let financeDetails = null;
+  if (!financeVisible && !financeLink) {
+    const pageLinks = await page.$$eval('a[href]', (els) => els.slice(0, 8).map((e) => e.textContent.trim()).filter(Boolean)).catch(() => []);
+    financeDetails = [`No finance application form or link found. Page links include: ${pageLinks.length > 0 ? pageLinks.join(', ') : 'none'}`];
+  }
   findings.push({
     check: 'Finance Application form displays',
     pass: financeVisible || !!financeLink,
     reason: !financeVisible && !financeLink ? 'Finance application form or link not found/visible' : null,
+    details: financeDetails,
   });
 
   return findings;

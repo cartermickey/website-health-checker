@@ -15,6 +15,7 @@ async function runChecks(page, siteUrl) {
     check: 'Listings display pricing',
     pass: hasPrice,
     reason: !hasPrice ? 'No price element with dollar amount found on listings' : null,
+    details: !hasPrice ? [`Page body length: ${priceBodyText.length} chars — no $X,XXX pattern found`] : null,
   });
 
   // Sort by Price Low to High
@@ -85,10 +86,17 @@ async function runChecks(page, siteUrl) {
     ['view details', 'details', 'more info', 'check availability', 'get price', 'see details', 'shop now', 'view vehicle', 'learn more'],
     ['a', 'button']
   );
+  let ctaDetails = null;
+  if (ctaEls.length === 0) {
+    const allLinks = await page.$$('a[href]').catch(() => []);
+    const sample = (await Promise.all(allLinks.slice(0, 5).map((el) => el.textContent().catch(() => '')))).map((t) => t.trim()).filter(Boolean);
+    ctaDetails = [`Links found on page: ${sample.length > 0 ? sample.join(', ') : 'none'}`];
+  }
   findings.push({
     check: 'Expected CTAs present on listings',
     pass: ctaEls.length > 0,
     reason: ctaEls.length === 0 ? 'No CTA buttons/links found on listing cards' : null,
+    details: ctaDetails,
   });
 
   return findings;

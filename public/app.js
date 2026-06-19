@@ -89,6 +89,34 @@ function streamAudit(auditId) {
         item.appendChild(reason);
       }
 
+      if (!event.pass && event.screenshot) {
+        const thumb = document.createElement('img');
+        thumb.className = 'failure-screenshot';
+        thumb.src = event.screenshot;
+        thumb.title = 'Click to enlarge';
+        thumb.addEventListener('click', () => {
+          const overlay = document.createElement('div');
+          overlay.className = 'screenshot-overlay';
+          const img = document.createElement('img');
+          img.src = event.screenshot;
+          overlay.appendChild(img);
+          overlay.addEventListener('click', () => overlay.remove());
+          document.body.appendChild(overlay);
+        });
+        item.appendChild(thumb);
+      }
+
+      if (!event.pass && event.details && event.details.length > 0) {
+        const dl = document.createElement('ul');
+        dl.className = 'failure-details';
+        event.details.forEach((line) => {
+          const li = document.createElement('li');
+          li.textContent = line;
+          dl.appendChild(li);
+        });
+        item.appendChild(dl);
+      }
+
       pageGroups[event.page].appendChild(item);
     }
 

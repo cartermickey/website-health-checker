@@ -3,7 +3,18 @@ const { findElementsByKeywords } = require('../utils');
 async function tryModalCTA(page, keywords, checkName) {
   const triggers = await findElementsByKeywords(page, keywords, ['button', 'a', '[role="button"]']);
   if (triggers.length === 0) {
-    return { check: checkName, pass: false, reason: 'Button not found on page' };
+    const allCtaEls = await page.$$('button, a[href]').catch(() => []);
+    const sample = (await Promise.all(
+      allCtaEls.slice(0, 5).map((el) => el.textContent().catch(() => ''))
+    )).map((t) => t.trim()).filter(Boolean);
+    return {
+      check: checkName,
+      pass: false,
+      reason: 'Button not found on page',
+      details: sample.length
+        ? [`Buttons/links found on page: ${sample.join(', ')}`]
+        : ['No buttons or links found on page at all'],
+    };
   }
   for (const trigger of triggers) {
     try {
@@ -27,7 +38,13 @@ async function tryModalCTA(page, keywords, checkName) {
       }
     } catch { continue; }
   }
-  return { check: checkName, pass: false, reason: 'Button clicked but no modal or navigation occurred' };
+  const firstLabel = await triggers[0].textContent().catch(() => '?');
+  return {
+    check: checkName,
+    pass: false,
+    reason: 'Button clicked but no modal or navigation occurred',
+    details: [`Clicked "${firstLabel.trim()}" — no modal appeared and URL did not change`],
+  };
 }
 
 async function runChecks(page, siteUrl) {
@@ -47,6 +64,10 @@ async function runChecks(page, siteUrl) {
     check: 'Vehicle price is present',
     pass: hasPrice,
     reason: !hasPrice ? 'No price element with dollar amount found' : null,
+    details: !hasPrice ? [
+      `Page body length: ${priceBodyText.length} chars`,
+      priceBodyText.length < 500 ? 'Page may not have loaded fully' : 'Page loaded but no dollar amounts found',
+    ] : null,
   });
 
   // VIN
@@ -58,6 +79,7 @@ async function runChecks(page, siteUrl) {
     check: 'VIN is present',
     pass: !!vinMatch,
     reason: !vinMatch ? 'No VIN found on page' : null,
+    details: !vinMatch ? [`Current URL: ${page.url()}`] : null,
   });
 
   // Stock number
