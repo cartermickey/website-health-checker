@@ -54,7 +54,12 @@ async function runChecks(page, siteUrl) {
     reason: !rotatorWorking && rotators.length > 0 ? 'Rotator links found but none navigate' : null,
   });
 
-  // Chat widget
+  // Chat widget — wait up to 5s for dynamic widgets like Gubagoo to inject themselves
+  await page.waitForSelector(
+    '[class*="gubagoo"], [id*="gubagoo"], iframe[src*="gubagoo"], ' +
+    '[id*="chat"], [class*="chat"], [class*="podium"], [class*="activengage"]',
+    { timeout: 5000 }
+  ).catch(() => {});
   const chatWidget = await page.$(
     '[id*="chat"], [class*="chat"], [class*="livechat"], [id*="livechat"], ' +
     '[class*="drift"], [class*="intercom"], iframe[src*="chat"], iframe[src*="live"], ' +
