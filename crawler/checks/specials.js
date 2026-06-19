@@ -23,7 +23,7 @@ async function runChecks(page, siteUrl) {
     ['view', 'details', 'get deal', 'claim', 'see offer', 'shop now'],
     ['a[href]']
   );
-  let ctaValid = ctaLinks.length === 0;
+  let ctaValid = false;
   for (const link of ctaLinks.slice(0, 3)) {
     const href = await link.getAttribute('href').catch(() => null);
     if (href && href !== '#' && !href.startsWith('javascript:')) { ctaValid = true; break; }
@@ -31,7 +31,11 @@ async function runChecks(page, siteUrl) {
   findings.push({
     check: 'Specials CTAs navigate to VDP or offer page',
     pass: ctaValid,
-    reason: !ctaValid && ctaLinks.length > 0 ? 'Specials CTA links have no valid targets' : null,
+    reason: !ctaValid
+      ? ctaLinks.length === 0
+        ? 'No specials CTA links found on page'
+        : 'CTA links found but none have valid targets'
+      : null,
   });
 
   return findings;
