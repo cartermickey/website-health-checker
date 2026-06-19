@@ -24,7 +24,13 @@ async function runAudit(auditId, siteUrl) {
   const audit = get(auditId);
   if (!audit) throw new Error(`Audit ${auditId} not found`);
 
-  const emit = (event) => { if (audit.emit) audit.emit(event); };
+  const emit = (event) => {
+    if (audit.emit) {
+      audit.emit(event);
+    } else {
+      audit.queue.push(event);
+    }
+  };
   const browser = await chromium.launch({ headless: true });
   const timeoutId = setTimeout(() => browser.close().catch(() => {}), AUDIT_TIMEOUT_MS);
 
@@ -34,7 +40,7 @@ async function runAudit(auditId, siteUrl) {
   try {
     const context = await browser.newContext({ ignoreHTTPSErrors: true });
 
-    for (const { type, label, module } of PAGE_CHECKS) {
+    for (const { type, label, module: mod } of PAGE_CHECKS) {
       emit({ type: 'progress', page: label, message: `Locating ${label} page...` });
 
       const page = await context.newPage();
@@ -55,7 +61,9 @@ async function runAudit(auditId, siteUrl) {
 
       // General checks (reloads the page inside general.runChecks)
       emit({ type: 'progress', page: label, message: `Running general checks on ${label}...` });
-      const generalFindings = await general.runChecks(page, pageUrl).catch(() => []);
+      const generalFindings = await general.runChecks(page, pageUrl).catch((err) => [
+        { check: 'General checks', pass: false, reason: 'Unexpected error: ' + err.message },
+      ]);
       for (const f of generalFindings) {
         emit({ type: 'finding', page: label, ...f });
         f.pass ? passed++ : failed++;
@@ -63,7 +71,9 @@ async function runAudit(auditId, siteUrl) {
 
       // Page-specific checks (page already loaded from general.runChecks)
       emit({ type: 'progress', page: label, message: `Running ${label}-specific checks...` });
-      const specificFindings = await module.runChecks(page, siteUrl).catch(() => []);
+      const specificFindings = await mod.runChecks(page, siteUrl).catch((err) => [
+        { check: `${label} checks`, pass: false, reason: 'Unexpected error: ' + err.message },
+      ]);
       for (const f of specificFindings) {
         emit({ type: 'finding', page: label, ...f });
         f.pass ? passed++ : failed++;

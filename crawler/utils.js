@@ -45,7 +45,11 @@ async function findPageUrl(page, siteUrl, pageType) {
     if (!srpUrl) return null;
     try {
       await page.goto(srpUrl, { waitUntil: 'domcontentloaded', timeout: 15000 });
-      const link = await page.$('a[href*="/vehicles/"], a[href*="/vdp/"], a[href*="/inventory/"][href!="' + srpUrl + '"]');
+      const links = await page.$$('a[href*="/vehicles/"], a[href*="/vdp/"], a[href*="/inventory/"]');
+      const link = (await Promise.all(links.map(async (l) => {
+        const href = await l.getAttribute('href').catch(() => null);
+        return href && href !== srpUrl ? l : null;
+      }))).find((l) => l !== null) || null;
       if (link) {
         const href = await link.getAttribute('href');
         return href.startsWith('http') ? href : new URL(href, srpUrl).href;

@@ -15,6 +15,11 @@ router.get('/:id/stream', (req, res) => {
     res.write(`data: ${JSON.stringify(event)}\n\n`);
   };
 
+  // Flush any events buffered before the stream connected
+  for (const buffered of audit.queue.splice(0)) {
+    audit.emit(buffered);
+  }
+
   req.on('close', () => {
     audit.emit = null;
   });
