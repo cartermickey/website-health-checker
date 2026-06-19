@@ -15,7 +15,8 @@ fetch('/api/sites')
       opt.textContent = site.name;
       siteSelect.appendChild(opt);
     });
-  });
+  })
+  .catch(() => setStatus('Failed to load site list. Please refresh.'));
 
 siteSelect.addEventListener('change', () => {
   runBtn.disabled = !siteSelect.value;
@@ -38,7 +39,10 @@ function startAudit() {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ url }),
   })
-    .then((r) => r.json())
+    .then((r) => {
+      if (!r.ok) throw new Error(`Server error ${r.status}`);
+      return r.json();
+    })
     .then(({ auditId }) => streamAudit(auditId))
     .catch((err) => setStatus('Error: ' + err.message));
 }
@@ -59,22 +63,39 @@ function streamAudit(auditId) {
       if (!pageGroups[event.page]) {
         pageGroups[event.page] = document.createElement('div');
         pageGroups[event.page].className = 'page-group';
-        pageGroups[event.page].innerHTML = `<h2>${event.page}</h2>`;
+        const heading = document.createElement('h2');
+        heading.textContent = event.page;
+        pageGroups[event.page].appendChild(heading);
         findingsList.appendChild(pageGroups[event.page]);
       }
       const item = document.createElement('div');
       item.className = `finding-item ${event.pass ? 'pass' : 'fail'}`;
-      item.innerHTML = `
-        <span class="icon">${event.pass ? '✅' : '❌'}</span>
-        <span class="check-name">${event.check}</span>
-        ${!event.pass && event.reason ? `<span class="reason">${event.reason}</span>` : ''}
-      `;
+
+      const icon = document.createElement('span');
+      icon.className = 'icon';
+      icon.textContent = event.pass ? '✅' : '❌';
+
+      const checkName = document.createElement('span');
+      checkName.className = 'check-name';
+      checkName.textContent = event.check;
+
+      item.appendChild(icon);
+      item.appendChild(checkName);
+
+      if (!event.pass && event.reason) {
+        const reason = document.createElement('span');
+        reason.className = 'reason';
+        reason.textContent = event.reason;
+        item.appendChild(reason);
+      }
+
       pageGroups[event.page].appendChild(item);
     }
 
     if (event.type === 'done') {
       es.close();
       runBtn.disabled = false;
+      results.classList.remove('hidden');
       const { passed, failed } = event.summary;
       summary.innerHTML = `
         <div class="summary-box">
