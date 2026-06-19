@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const audits = require('../store/audits');
+const { runAudit } = require('../crawler');
 
 router.post('/', (req, res) => {
   const { url } = req.body;
@@ -8,6 +9,9 @@ router.post('/', (req, res) => {
 
   const auditId = audits.create(url);
   res.json({ auditId });
+
+  // Start async — do not await
+  runAudit(auditId, url).catch((err) => console.error('Audit failed:', err));
 });
 
 module.exports = router;
