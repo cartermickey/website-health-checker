@@ -1,29 +1,39 @@
 # Website Health Checker
 
-Automated health checker for Cable Dahmer websites. Scans pages and verifies links, images, buttons, and search functionality are working correctly.
+Automated health checker for Cable Dahmer dealership websites.
 
-## Project Purpose
+## Running the Tool
 
-This tool crawls one or more Cable Dahmer website URLs and produces a health report covering:
-- Broken links (internal and external)
-- Missing or broken images
-- Non-functional buttons and interactive elements
-- Search functionality validation
-- HTTP error detection (404s, 500s, redirects)
+```bash
+npm install
+npx playwright install chromium
+npm start
+```
 
-## Tech Stack
+Open http://localhost:3000, select a site, click Run Audit.
 
-> Will be finalized during design phase.
+## Running Tests
+
+```bash
+npm run test:unit        # utils unit tests (node:test)
+npm run test:browser     # check module tests (playwright/test)
+npm test                 # both
+```
+
+## Adding or Updating Sites
+
+Edit `routes/sites.js` — add `{ name, url }` entries to the `SITES` array.
 
 ## Project Structure
 
-> Will be populated as the project is built.
+- `server.js` — Express entry point
+- `store/audits.js` — in-memory audit store
+- `routes/` — API routes (sites, audit, stream)
+- `crawler/index.js` — orchestrates the full audit
+- `crawler/utils.js` — fuzzy matching, page type detection, URL discovery
+- `crawler/checks/` — one module per page type
+- `public/` — frontend (vanilla HTML/CSS/JS)
 
-## Running the Health Checker
+## Design Spec
 
-> Will be documented as the project is built.
-
-## Development Notes
-
-- Design spec lives in `docs/superpowers/specs/`
-- This project is being built for Cable Dahmer website QA workflows
+`docs/superpowers/specs/2026-06-19-health-checker-design.md`
