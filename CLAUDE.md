@@ -42,6 +42,8 @@ Then page-type-specific checks:
 
 **Button rule:** CTAs are clicked to verify modals/forms open — forms are never submitted.
 
+**CDK/Dealer.com platform note:** Cable Dahmer sites run on CDK. CTAs navigate to separate pages (`/trade.aspx`, `/paymentcalc.aspx`) rather than opening modals. URL-navigation is accepted as a pass for all CTA checks. Page URLs use `.aspx` patterns (`/searchnew.aspx`, `/finance.aspx`).
+
 ## Project Structure
 
 ```
@@ -102,16 +104,34 @@ To add a site: edit `routes/sites.js` and add `{ name, url }` to the `SITES` arr
 - **Fuzzy keyword matching** — CTA detection uses keyword sets (e.g., `["trade", "trade-in", "trade value"]`) rather than exact text, handling variation across Cable Dahmer sites.
 - **Page navigation contract** — `general.runChecks(page, pageUrl)` calls `page.goto()` internally. All other check modules receive an already-navigated page and must not call `page.goto()`.
 - **10-minute hard timeout** — the browser is force-closed after 10 minutes; partial results are shown for any uncompleted page types.
+- **Screenshots on failure** — `crawler/index.js` calls `captureFailureScreenshot(page)` for every failed finding, attaching a base64 JPEG data URI as `f.screenshot`. The frontend renders it as a clickable thumbnail; clicking opens a full-size overlay.
+- **Diagnostic details** — check modules attach a `details: string[]` array to failed findings describing what was actually found (buttons present, page body length, visible links). These appear as a bullet list below the screenshot in the UI.
+- **Gubagoo chat widget** — homepage check waits up to 5s with `waitForSelector` for Gubagoo's JS-injected widget before querying. Selector list covers 12+ chat platforms.
 
 ## SSE Event Shape
 
 ```json
 { "type": "progress", "page": "SRP", "message": "Locating SRP page..." }
-{ "type": "finding", "page": "VDP", "check": "Calculate Your Payment modal", "pass": false, "reason": "element not found" }
-{ "type": "finding", "page": "General", "check": "Page load under 3s", "pass": true, "reason": null }
+{ "type": "finding", "page": "VDP", "check": "Calculate Your Payment modal", "pass": false, "reason": "Button not found on page", "screenshot": "data:image/jpeg;base64,...", "details": ["Buttons/links found on page: Get a Quote, Contact Us"] }
+{ "type": "finding", "page": "General", "check": "Page load under 3s", "pass": true, "reason": null, "screenshot": null, "details": null }
 { "type": "done", "summary": { "passed": 24, "failed": 3 } }
 { "type": "error", "message": "..." }
 ```
+
+`screenshot` and `details` are only populated on failed findings. Passed findings always have `null` for both.
+
+## Where We Left Off (2026-06-19)
+
+The tool is fully functional against all 9 Cable Dahmer stores. The most recent feature shipped was **deep failure details**:
+- Failed findings show a JPEG screenshot of the page at the moment of failure
+- Each check module returns a `details[]` array with diagnostic context (what buttons were found, page body length, current URL, visible links)
+- Frontend renders screenshot as clickable thumbnail + expandable details list
+
+### Potential next steps
+- **Email / Slack report** — send a summary after each audit completes
+- **Scheduled audits** — run automatically on a cron and track pass/fail trends over time
+- **Historical comparison** — diff today's results against the last run and highlight regressions
+- **Expand check coverage** — phone number present, Google Maps embed loads, inventory count non-zero
 
 ## Design Spec
 
