@@ -11,14 +11,22 @@ const MOCK_HTML = `
   </body></html>
 `;
 
+// Mock requestFn that returns 200 for all URLs except those containing '/broken'
+const mockHttpGet = async (url) => {
+  if (url.includes('/broken')) return { status: () => 404, ok: () => false };
+  return { status: () => 200, ok: () => true };
+};
+
 test('passes when page loads fast and nav links respond 200', async ({ page }) => {
   await page.route('https://example.com/**', (route) =>
     route.fulfill({ status: 200, contentType: 'text/html', body: MOCK_HTML })
   );
 
-  const findings = await runChecks(page, 'https://example.com/');
+  const findings = await runChecks(page, 'https://example.com/', mockHttpGet);
   const loadCheck = findings.find((f) => f.check === 'Page loads under 3 seconds');
   expect(loadCheck.pass).toBe(true);
+  const imgCheck = findings.find((f) => f.check === 'No broken images');
+  expect(imgCheck.pass).toBe(true);
   const navCheck = findings.find((f) => f.check === 'No broken navigation links');
   expect(navCheck.pass).toBe(true);
 });
@@ -29,9 +37,8 @@ test('fails when a nav link returns 404', async ({ page }) => {
       <html><body><nav><a href="https://example.com/broken">Broken</a></nav></body></html>
     ` })
   );
-  await page.route('https://example.com/broken', (route) => route.fulfill({ status: 404 }));
 
-  const findings = await runChecks(page, 'https://example.com/');
+  const findings = await runChecks(page, 'https://example.com/', mockHttpGet);
   const navCheck = findings.find((f) => f.check === 'No broken navigation links');
   expect(navCheck.pass).toBe(false);
 });
