@@ -83,10 +83,15 @@ tests/
 
 | Site | URL |
 |------|-----|
-| Cable Dahmer Chevrolet | https://www.cabledahmerchevrolet.com |
-| Cable Dahmer Honda | https://www.cabledahmerhonda.com |
-| Cable Dahmer Cadillac | https://www.cabledahmercadillac.com |
-| Cable Dahmer Buick GMC | https://www.cabledahmerbuickgmc.com |
+| Cable Dahmer Chevrolet of Kansas City | https://www.cabledahmerkc.com |
+| Cable Dahmer Chevrolet of Independence | https://www.cabledahmerind.com |
+| Cable Dahmer Buick GMC of Independence | https://www.cabledahmerbuickgmc.com |
+| Cable Dahmer Buick GMC of Kansas City | https://www.cabledahmerbgkc.com |
+| Cable Dahmer Kia of Lee's Summit | https://www.cabledahmerkia.com |
+| Cable Dahmer Kia of Lawrence | https://www.cabledahmerlawrence.com |
+| Cable Dahmer Chrysler Dodge Jeep Ram of KC | https://www.cabledahmercdjr.com |
+| Cable Dahmer Cadillac of Kansas City | https://www.cabledahmercadillac.com |
+| Cable Dahmer of Topeka | https://www.cabledahmertopeka.com |
 
 To add a site: edit `routes/sites.js` and add `{ name, url }` to the `SITES` array.
 
