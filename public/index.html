@@ -2,10 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cable Dahmer Website Health Checker</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <h1>Health Checker</h1>
-  <p>Coming soon.</p>
+  <div class="container">
+    <h1>Website Health Checker</h1>
+    <div class="controls">
+      <select id="site-select">
+        <option value="">Select a website...</option>
+      </select>
+      <button id="run-btn" disabled>Run Audit</button>
+    </div>
+
+    <div id="status-bar" class="status-bar hidden"></div>
+
+    <div id="results" class="results hidden">
+      <div id="summary" class="summary"></div>
+      <div id="findings-list" class="findings-list"></div>
+    </div>
+  </div>
+  <script src="app.js"></script>
 </body>
 </html>
