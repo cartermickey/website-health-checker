@@ -5,6 +5,8 @@ const app = express();
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+app.use('/api/sites', require('./routes/sites'));
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Health checker running at http://localhost:${PORT}`));
 
